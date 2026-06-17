@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapido - Instant Ride Booking Portal</title>
+    <!-- Tailwind CSS Integration via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Vector Engine for Transport and Mapping Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-sans text-gray-900 antialiased min-h-screen flex flex-col">
+
+    <!-- GLOBAL MAIN APP HEADER -->
+    <header class="bg-amber-400 text-slate-900 border-b border-amber-500 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <!-- Brand Logo Frame -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('booking')">
+                <div class="bg-slate-950 text-amber-400 p-2 rounded-xl shadow-inner">
+                    <i class="fa-solid fa-motorcycle text-xl"></i>
+                </div>
+                <span class="font-black text-2xl tracking-tighter">rapido<span class="text-xs font-bold bg-slate-950 text-amber-400 px-1.5 py-0.5 rounded ml-1 tracking-normal font-mono">v3.4</span></span>
+            </div>
+
+            <!-- Top Level Action Controls -->
+            <nav class="flex items-center gap-4 text-xs font-bold uppercase tracking-wider">
+                <button onclick="navigate('booking')" class="hover:bg-amber-500 px-3 py-2 rounded-lg transition-all">
+                    <i class="fa-solid fa-map-location-dot mr-1"></i> Ride Console
+                </button>
+                <button onclick="navigate('backend-hub')" class="bg-slate-950 hover:bg-slate-800 text-amber-400 px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-server text-[10px]"></i> Infrastructure Console
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTENT DISPLAY FRAME CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- ================= RIDE HAILING BOOKING WORKSPACE VIEW ================= -->
+        <div id="view-booking" class="view-panel block space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                
+                <!-- LEFT PANEL: BOOKING CONTROL DECK -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs space-y-4">
+                    <h3 class="text-base font-black text-slate-900 border-b border-gray-100 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-route text-amber-500"></i> Request a Rapido Ride
+                    </h3>
+
+                    <!-- Ride Address Entry Form Deck -->
+                    <div class="space-y-3 text-xs">
+                        <div class="relative">
+                            <label class="block font-bold text-gray-500 mb-1 uppercase tracking-wide text-[10px]">Pickup Location</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-circle text-emerald-500 absolute left-3 top-3 text-[10px]"></i>
+                                <input type="text" id="input-pickup" placeholder="Enter source address (e.g., Metro Station)..." 
+                                       class="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white text-xs transition-all">
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <label class="block font-bold text-gray-500 mb-1 uppercase tracking-wide text-[10px]">Drop Location</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-location-dot text-red-500 absolute left-3 top-3 text-xs"></i>
+                                <input type="text" id="input-drop" placeholder="Enter target destination..." 
+                                       class="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white text-xs transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cab/Bike Type Selector Deck Matrix -->
+                    <div class="space-y-2">
+                        <label class="block font-bold text-gray-500 uppercase tracking-wide text-[10px]">Select Vehicle Tier</label>
+                        <div id="vehicle-tier-selection-zone" class="space-y-2">
+                            <!-- Injected dynamically from data matrices via script loops -->
+                        </div>
+                    </div>
+
+                    <!-- Primary Dispatch Button Element -->
+                    <button onclick="initiateRideRequestLifecycle()" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl transition shadow-xs text-xs uppercase tracking-wider text-center">
+                        Book Rapido Ride Instantly
+                    </button>
+                </div>
+
+                <!-- RIGHT PANEL: INTERACTIVE MONITORING SIMULATOR MAP -->
+                <div class="lg:col-span-2 space-y-4">
+                    <!-- Dynamic Component Status Tracker Banner -->
+                    <div class="bg-slate-900 text-white rounded-2xl p-6 flex flex-col justify-between shadow-sm relative overflow-hidden min-h-[320px]">
+                        
+                        <div class="z-10 space-y-1">
+                            <span class="bg-amber-400 text-slate-950 font-mono text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Live Booking State Engine</span>
+                            <h4 class="text-xl font-black font-sans tracking-tight pt-1">Lifecycle Status: <span id="state-label-status" class="text-amber-400">IDLE</span></h4>
+                            <p id="state-label-desc" class="text-slate-400 text-xs max-w-md">Enter trip coordinates and trigger requests to fire off dispatch microservice allocations.</p>
+                        </div>
+
+                        <!-- Central Visual Tracker Simulation Layout Graph -->
+                        <div class="my-6 py-4 flex items-center justify-center relative z-10">
+                            <div id="simulated-map-canvas" class="w-full max-w-md bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-center text-xs text-slate-500 space-y-2">
+                                <i class="fa-solid fa-map-location text-3xl text-slate-700 block animate-pulse"></i>
+                                <p id="map-canvas-text">System tracking maps pipeline standing by... waiting for coordinate validation payload confirmation.</p>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Bill Computation Tracker Row Footer -->
+                        <div class="pt-4 border-t border-slate-800 flex items-center justify-between text-xs z-10">
+                            <div>
+                                <span class="text-slate-500 block uppercase font-bold text-[9px]">Active Trip Distance</span>
+                                <span id="state-label-distance" class="font-mono text-sm font-bold text-white">0.0 KM</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-slate-500 block uppercase font-bold text-[9px]">Calculated Net Fare</span>
+                                <span id="state-label-fare" class="font-mono text-base font-black text-emerald-400">$0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Decorative Matrix Grid Background Layer -->
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-amber-400/5 via-transparent to-transparent pointer-events-none"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= REST ENDPOINTS INFRASTRUCTURE HUB ================= -->
+        <div id="view-backend-hub" class="view-panel hidden space-y-6">
+            <div class="border-b border-gray-200 pb-4">
+                <h2 class="text-xl font-black text-slate-900 tracking-tight">Enterprise Routing Layer Dashboard</h2>
+                <p class="text-xs text-gray-500 mt-1">Simulated management environment tracking active REST controllers, fleet mappings, dynamic object models, and data persistence streams.</p>
+            </div>
+
+            <!-- Meta Parameter Summary row info cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-[11px]">
+                <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-2xs flex items-center justify-between">
+                    <div>
+                        <span class="text-gray-400 block font-bold tracking-wider uppercase text-[9px]">Controller Controller Mapping</span>
+                        <span class="text-xs font-bold text-amber-600">@RestController</span>
+                    </div>
+                    <i class="fa-solid fa-circle-nodes text-amber-500 text-lg"></i>
+                </div>
+                <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-2xs flex items-center justify-between">
+                    <div>
+                        <span class="text-gray-400 block font-bold tracking-wider uppercase text-[9px]">Active Filter Evaluator</span>
+                        <span class="text-xs font-bold text-slate-800">Predicate Streams</span>
+                    </div>
+                    <i class="fa-solid fa-filter text-indigo-500 text-lg"></i>
+                </div>
+                <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-2xs flex items-center justify-between">
+                    <div>
+                        <span class="text-gray-400 block font-bold tracking-wider uppercase text-[9px]">Persistent Data Entity</span>
+                        <span class="text-xs font-bold text-emerald-600">JPA Repository Mapping</span>
+                    </div>
+                    <i class="fa-solid fa-database text-emerald-500 text-lg"></i>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Data Injection Configuration Component -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-2xs space-y-4">
+                    <h4 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-900 border-b border-gray-100 pb-2 flex items-center justify-between">
+                        <span><i class="fa-solid fa-user-plus text-amber-600 mr-1.5"></i> Register New Captain</span>
+                        <span class="bg-amber-100 text-amber-900 text-[9px] px-2 py-0.2 rounded font-bold">POST</span>
+                    </h4>
+                    
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Driver Full Name</label>
+                            <input type="text" id="api-input-name" placeholder="e.g., Captain Vikram Singh" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Assigned Fleet Vehicle Tier</label>
+                            <select id="api-input-tier" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none bg-white">
+                                <option value="Bike">Rapido Bike Taxi</option>
+                                <option value="Auto">Rapido Auto Plus</option>
+                                <option value="Cab">Rapido Prime Cab</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-600 mb-1">Base Per-KM Performance Multiplier</label>
+                            <input type="number" id="api-input-rate" placeholder="1.20" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none">
+                        </div>
+                        <button onclick="executeBackendCrudCreate()" class="w-full bg-slate-950 hover:bg-slate-800 text-amber-400 font-bold py-2 rounded-lg transition shadow-xs text-xs uppercase tracking-wide">
+                            Persist Captain Data (repository.save)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Application System Console Output Terminal Logger component window -->
+                <div class="bg-slate-950 text-slate-300 rounded-xl p-5 shadow-sm lg:col-span-2 flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-2">
+                            <h4 class="text-xs font-bold font-mono text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-terminal animate-pulse"></i> Core Infrastructure MVC System Console Log
+                            </h4>
+                            <button onclick="clearConsoleLogs()" class="text-[9px] font-mono border border-slate-800 px-2 py-0.5 rounded hover:bg-slate-900 transition text-slate-500 hover:text-slate-300">Clear Logs</button>
+                        </div>
+                        <!-- Terminal Log Row Placements stack -->
+                        <div id="api-terminal-logs" class="font-mono text-[11px] space-y-1 max-h-[190px] overflow-y-auto pr-2">
+                            <p class="text-slate-500">[INFO] Embedded runtime container initializing mapping dependencies on port 8080</p>
+                            <p class="text-slate-500">[INFO] Spatial geometry coordinate mapping adapters successfully linked.</p>
+                            <p class="text-amber-400">[API STREAM] GET query resolved for endpoint route /api/v1/fleet/captains - Streams compiled array datasets cleanly.</p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-900 flex justify-between text-[10px] font-mono text-slate-500">
+                        <span>Database System: <strong class="text-emerald-400 font-bold">In-Memory Engine</strong></span>
+                        <span>Auto-Configuration Status: <strong class="text-amber-400 font-bold">Stable</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MAIN ROOT STACK FRAME FOOTER COMPONENT -->
+    <footer class="bg-slate-900 text-slate-500 text-xs border-t border-slate-800 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+                <p class="font-bold text-slate-400">Rapido Fleet Architecture Simulator - Platform Engineering Operations</p>
+                <p class="text-[11px] text-slate-600 mt-0.5">&copy; 2026 Production Environment Shell. Unified cleanly inside a single document sandbox deployment.</p>
+            </div>
+            <div class="flex gap-4 text-base text-slate-600">
+                <i class="fa-solid fa-layer-group hover:text-amber-400 transition" title="Interface Layout Grid"></i>
+                <i class="fa-solid fa-calculator hover:text-amber-400 transition" title="Data Calculation Engine"></i>
+                <i class="fa-brands fa-react hover:text-amber-400 transition" title="Dynamic State Machine"></i>
+                <i class="fa-solid fa-server hover:text-amber-400 transition" title="Microservices Pipeline"></i>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ================= RUNTIME CORE DATA & CONTROL LOGIC ENGINES ================= -->
+    <script>
+        // ================= SEED DATA VARIABLES MODEL ARCHITECTURE =================
+        let vehicleTiersDataset = [
+            { id: "Bike", title: "Rapido Bike Taxi", baseFare: 1.50, perKmRate: 0.40, etaMins: 2, icon: "fa-motorcycle" },
+            { id: "Auto", title: "Rapido Auto Plus", baseFare: 3.00, perKmRate: 0.65, etaMins: 4, icon: "fa-truck-field" },
+            { id: "Cab", title: "Rapido Sedan Prime", baseFare: 5.50, perKmRate: 0.95, etaMins: 6, icon: "fa-car" }
+        ];
+
+        // Global Application State Trackers
+        let activeSelectedTierPointer = "Bike";
+        let activeTripLifecycleState = "IDLE"; // Configurations track: IDLE -> SEARCHING -> ACTIVE -> ARRIVED
+
+        // ================= MULTIPLEX VIEW SCREEN NAVIGATION CONTROL =================
+        function navigate(viewTargetId) {
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.add('hidden');
+                panel.classList.remove('block');
+            });
+
+            const targetNode = document.getElementById(`view-${viewTargetId}`);
+            if (targetNode) {
+                targetNode.classList.remove('hidden');
+                targetNode.classList.add('block');
+            }
+            appendTerminalLog(`[NAVIGATION] Screen route swapped focus context directly to viewport: view-${viewTargetId}`, "text-amber-400");
+        }
+
+        // ================= VEHICLE TIER SELECTION ELEMENT INJECTOR =================
+        function renderVehicleTierSelectionMatrix() {
+            const containerBox = document.getElementById('vehicle-tier-selection-zone');
+            containerBox.innerHTML = ''; // Wipe pre-existing inner trees 
+
+            vehicleTiersDataset.forEach(tier => {
+                const isSelectedClass = (tier.id === activeSelectedTierPointer) 
+                    ? 'border-amber-400 bg-amber-50/60 ring-2 ring-amber-400/30' 
+                    : 'border-gray-200 hover:bg-gray-50';
+
+                const tierRowHTML = `
+                    <div onclick="selectVehicleTierState('${tier.id}')" class="border p-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-150 ${isSelectedClass}">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-900 text-amber-400 h-8 w-8 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid ${tier.icon} text-sm"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-xs font-bold text-slate-900">${tier.title}</h4>
+                                <span class="text-[10px] font-mono text-gray-400">Nearest ETA: ${tier.etaMins} Mins</span>
+                            </div>
+                        </div>
+                        <div class="text-right font-mono text-xs">
+                            <span class="block font-bold text-slate-900">$${tier.baseFare.toFixed(2)} base</span>
+                            <span class="text-[9px] text-gray-400">$${tier.perKmRate.toFixed(2)}/KM rate</span>
+                        </div>
+                    </div>`;
+                containerBox.insertAdjacentHTML('beforeend', tierRowHTML);
+            });
+            recalculateBillMetricsOutput();
+        }
+
+        function selectVehicleTierState(tierIdValue) {
+            activeSelectedTierPointer = tierIdValue;
+            renderVehicleTierSelectionMatrix(); // Cascade refresh updates down interface layout frames 
+            appendTerminalLog(`[STATE_CHANGE] Modified active selected tracking vehicle category to pointer: ${tierIdValue}`, "text-slate-400");
+        }
+
+        // ================= CALCULATION OPERATORS CORE ENGINE =================
+        function recalculateBillMetricsOutput() {
+            const pickupTextStr = document.getElementById('input-pickup').value.trim();
+            const dropTextStr = document.getElementById('input-drop').value.trim();
+
+            const stateDistanceLabel = document.getElementById('state-label-distance');
+            const stateFareLabel = document.getElementById('state-label-fare');
+
+            if (!pickupTextStr || !dropTextStr) {
+                stateDistanceLabel.innerText = "0.0 KM";
+                stateFareLabel.innerText = "$0.00";
+                return;
+            }
+
+            // Processing operation to evaluate dynamic ride distance strings patterns
+            const seedSumCombinedCharactersLength = pickupTextStr.length + dropTextStr.length;
+            const computedDynamicDistanceKM = parseFloat(((seedSumCombinedCharactersLength % 15) + 1.8).toFixed(1));
+
+            const matchedTierData = vehicleTiersDataset.find(t => t.id === activeSelectedTierPointer);
+            if (!matchedTierData) return;
+
+            // System computation formula processing variables
+            const calculatedTotalAggregateBillCost = matchedTierData.baseFare + (computedDynamicDistanceKM * matchedTierData.perKmRate);
+
+            // Synchronize calculated numbers straight back into interface elements
+            stateDistanceLabel.innerText = `${computedDynamicDistanceKM} KM`;
+            stateFareLabel.innerText = `$${calculatedTotalAggregateBillCost.toFixed(2)}`;
+        }
+
+        // Attach calculation triggers straight into input key entries
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('input-pickup').addEventListener('keyup', recalculateBillMetricsOutput);
+            document.getElementById('input-drop').addEventListener('keyup', recalculateBillMetricsOutput);
+        });
+
+        // ================= ASYNCHRONOUS TRANSACTION LIFECYCLE HANDLERS =================
+        function initiateRideRequestLifecycle() {
+            const pickupLoc = document.getElementById('input-pickup').value.trim();
+            const dropLoc = document.getElementById('input-drop').value.trim();
+
+            if (!pickupLoc || !dropLoc) {
+                alert("Please declare both pickup and destination address points within the form entries.");
+                return;
+            }
+
+            // Capture outputs values text string states
+            const finalDistanceStr = document.getElementById('state-label-distance').innerText;
+            const finalFareStr = document.getElementById('state-label-fare').innerText;
+
+            updateApplicationLifecycleState("SEARCHING", `Broadcasting transmission requirements matching nearby fleet vectors. Valued sum: ${finalFareStr}`);
+            appendTerminalLog(`[ASYNC ENGINE] Initializing request broadcast handlers. Calculated trip distance bounds: ${finalDistanceStr}`, "text-amber-400 font-bold");
+
+            // Multi-tier asynchronous transaction process simulation
+            new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve({
+                        captainName: "Captain Satnam Singh",
+                        vehiclePlate: "DL-3C-Z-4902",
+                        currentLatLong: "28.6139° N, 77.2090° E"
+                    });
+                }, 2000);
+            })
+            .then(captainPayload => {
+                updateApplicationLifecycleState("ACTIVE", `Captain assigned! ${captainPayload.captainName} (${captainPayload.vehiclePlate}) is actively navigating towards your pickup anchor location.`);
+                appendTerminalLog(`[API CONTROLLER SUCCESS] Dispatch optimization completed. Driver unit parameters mapped back cleanly onto interface states.`, "text-emerald-400 font-bold");
+                
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve(captainPayload);
+                    }, 3000);
+                });
+            })
+            .then(finalizedPayload => {
+                updateApplicationLifecycleState("ARRIVED", `Trip successfully concluded at drop destination! Billing processing parameters cleared out.`);
+                alert(`Ride Complete!\nThank you for riding with Rapido.\n\nCaptain Partner Reference: ${finalizedPayload.captainName}\nFinalized Billing Total Settled.`);
+                
+                // Flush layout inputs variables elements back to initialization conditions
+                document.getElementById('input-pickup').value = '';
+                document.getElementById('input-drop').value = '';
+                updateApplicationLifecycleState("IDLE", "Enter trip coordinates and trigger requests to fire off dispatch microservice allocations.");
+                recalculateBillMetricsOutput();
+            });
+        }
+
+        function updateApplicationLifecycleState(stateTokenClass, stateDescriptorTextString) {
+            activeTripLifecycleState = stateTokenClass;
+            
+            // Map modifications directly onto view tokens targets nodes 
+            document.getElementById('state-label-status').innerText = stateTokenClass;
+            document.getElementById('state-label-desc').innerText = stateDescriptorTextString;
+
+            const mapCanvasNode = document.getElementById('simulated-map-canvas');
+            const mapTextNode = document.getElementById('map-canvas-text');
+
+            // Conditional layout modifiers mapping matching tracking positions
+            if (stateTokenClass === "SEARCHING") {
+                mapCanvasNode.className = "w-full max-w-md bg-slate-950 border border-amber-500 p-4 font-mono text-center text-xs text-amber-400 space-y-2";
+                mapTextNode.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> [GEOPROXIMITY] Executing system queries for nearby fleet distribution components...`;
+            } else if (stateTokenClass === "ACTIVE") {
+                mapCanvasNode.className = "w-full max-w-md bg-slate-950 border border-emerald-500 p-4 font-mono text-center text-xs text-emerald-400 space-y-2";
+                mapTextNode.innerHTML = `<i class="fa-solid fa-motorcycle animate-bounce mr-2"></i> [LIVE RADAR] Captain locking GPS path trajectory loops. Transit tracking node active.`;
+            } else {
+                mapCanvasNode.className = "w-full max-w-md bg-slate-950 border border-slate-800 p-4 font-mono text-center text-xs text-slate-500 space-y-2";
+                mapTextNode.innerHTML = `System tracking maps pipeline standing by... waiting for coordinate validation payload confirmation.`;
+            }
+        }
+
+        // ================= ENTERPRISE DATA PERSISTENCE SIMULATORS =================
+        function executeBackendCrudCreate() {
+            const driverName = document.getElementById('api-input-name').value.trim();
+            const fleetTier = document.getElementById('api-input-tier').value;
+            const driverRate = parseFloat(document.getElementById('api-input-rate').value);
+
+            // Verification model validation evaluation mapping rules
+            if (!driverName || isNaN(driverRate) || driverRate <= 0) {
+                appendTerminalLog("[VALIDATION REJECTED] Intercepted data submission. Entry criteria failed backend validation constraints.", "text-red-400 font-bold");
+                alert("Invalid input variables declared. Please inspect property field structures.");
+                return;
+            }
+
+            // Emulating Model Entity initialization structures mappings
+            const simulatedNewlyConstructedCaptainEntity = {
+                id: "CAP_0" + (vehicleTiersDataset.length + 1),
+                title: `${driverName} (${fleetTier} Fleet)`,
+                baseFare: 2.00 * driverRate,
+                perKmRate: 0.50 * driverRate,
+                etaMins: Math.floor(Math.random() * 5 + 1),
+                icon: (fleetTier === "Bike") ? "fa-motorcycle" : (fleetTier === "Auto") ? "fa-truck-field" : "fa-car"
+            };
+
+            // Push object record directly down into dataset array collections
+            vehicleTiersDataset.push(simulatedNewlyConstructedCaptainEntity);
+
+            appendTerminalLog(`[API ENDPOINT] Resolved mapping route @PostMapping("/api/v1/fleet/register"). Data object initialized inside persistent storage context. Assigned Identity Key: ${simulatedNewlyConstructedCaptainEntity.id}`, "text-emerald-400 font-semibold");
+
+            // Flush text fields
+            document.getElementById('api-input-name').value = '';
+            document.getElementById('api-input-rate').value = '';
+
+            // Force dynamic interface redraws
+            renderVehicleTierSelectionMatrix();
+            alert(`Data Entity Record Committed Successfully:\n${simulatedNewlyConstructedCaptainEntity.title} saved into active system repositories.`);
+        }
+
+        function appendTerminalLog(messageTextString, tailwindColorTokenClass = "text-slate-300") {
+            const logsOutputConsoleBox = document.getElementById('api-terminal-logs');
+            const targetTimestampToken = new Date().toISOString().slice(11, 19);
+
+            const compiledRowHTMLStr = `<p class="${tailwindColorTokenClass}"><span class="text-slate-600 font-normal">[LOG ${targetTimestampToken}]</span> ${messageTextString}</p>`;
+            logsOutputConsoleBox.insertAdjacentHTML('beforeend', compiledRowHTMLStr);
+            
+            // Maintain layout container scroll adjustments
+            logsOutputConsoleBox.scrollTop = logsOutputConsoleBox.scrollHeight;
+        }
+
+        // Clear terminal output stream
+        function clearConsoleLogs() {
+            document.getElementById('api-terminal-logs').innerHTML = `<p class="text-slate-500">[SYSTEM] Logger data blocks flushed cleanly by supervisor administration commands pipeline overrides.</p>`;
+        }
+
+        // ================= SYSTEM INITIALIZATION MOUNT HOOK =================
+        window.addEventListener('DOMContentLoaded', () => {
+            renderVehicleTierSelectionMatrix();
+            appendTerminalLog("[BOOT ENGINE] Environment runtimes successfully compiled and mounted inside individual DOM container shell frame instances.", "text-amber-400 font-bold");
+        });
+    </script>
+</body>
+</html>
